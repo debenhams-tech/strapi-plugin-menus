@@ -12,24 +12,11 @@ export const UID_MENU = 'plugin::menus.menu';
 export const UID_MENU_ITEM = 'plugin::menus.menu-item';
 
 // eslint-disable-next-line prefer-regex-literals
-export const URL_ABSOLUTE_REGEX = new RegExp(
-  '^(https?:\\/\\/)?' +
-    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' +
-    '((\\d{1,3}\\.){3}\\d{1,3}))' +
-    '(\\:\\d+)?(\\/[-a-z\\d%_:.~+@]*)*' +
-    '(\\?[-a-z\\d%_:.~+@;&=]*)?' +
-    '(\\#[-a-z\\d_]*)?$',
-  'i'
-);
+export const URL_ABSOLUTE_REGEX =
+  /^https?:\/\/(www\.)?[-\p{L}0-9@:%._\+~#=]{1,256}\.[\p{L}0-9()]{1,6}\b([-\p{L}0-9()@:%_\+.~#?&//=]*)$/u;
 
 // eslint-disable-next-line prefer-regex-literals
-export const URL_RELATIVE_REGEX = new RegExp(
-  // prettier-ignore
-  '^(\\/[-a-z\\d%_:.~+@]*)*' +
-    '(\\?[-a-z\\d%_:.~+@;&=]*)?' +
-    '(\\#[-a-z\\d_]*)?$',
-  'i'
-);
+export const URL_RELATIVE_REGEX = /^([-\p{L}0-9()@:%_\+.~#?&//=]*)$/u;
 
 // eslint-disable-next-line prefer-regex-literals
 export const URL_MAILTO_REGEX = new RegExp('^mailto:(.*)@(.*)\\.(.*)$', 'i');
