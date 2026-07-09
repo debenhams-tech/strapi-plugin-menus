@@ -31,7 +31,10 @@
   "edit.tabs.title.link": "Link",
   "edit.tabs.title.advanced": "Advanced",
   "index.header.subtitle": "Customize the structure of menus and menu items",
+  "index.search.label": "Search by title or slug",
+  "index.search.placeholder": "Search by title or slug",
   "index.state.empty": "No menus found",
+  "index.state.empty-search": "No results found",
 
   "form.label.items": "Items",
   "form.label.option._blank": "_blank",

@@ -6,6 +6,7 @@ import get from 'lodash/get';
 import {
   DynamicTable,
   EmptyStateLayout,
+  SearchURLQuery,
   useAPIErrorHandler,
   useFetchClient,
   useNotification,
@@ -15,7 +16,7 @@ import {
 import { useNotifyAT } from '@strapi/design-system';
 import { Box } from '@strapi/design-system/Box';
 import { Button } from '@strapi/design-system/Button';
-import { ContentLayout, HeaderLayout } from '@strapi/design-system/Layout';
+import { ActionLayout, ContentLayout, HeaderLayout } from '@strapi/design-system/Layout';
 import Plus from '@strapi/icons/Plus';
 
 import { getRequestUrl, getTrad, pluginId, pluginName } from '../../utils';
@@ -57,6 +58,7 @@ const IndexView = ({ history }) => {
 
   const pageSize = get(query, 'pageSize', 10);
   const page = get(query, 'page', 1) * pageSize - pageSize;
+  const search = get(query, '_q', '');
 
   const getAllMenus = async () => {
     const { data } = await fetchClient.get(
@@ -66,6 +68,12 @@ const IndexView = ({ history }) => {
           start: page,
           limit: pageSize,
         },
+        // Filter by title or slug when a search term is present in the URL.
+        ...(search && {
+          filters: {
+            $or: [{ title: { $containsi: search } }, { slug: { $containsi: search } }],
+          },
+        }),
       })
     );
 
@@ -91,7 +99,7 @@ const IndexView = ({ history }) => {
 
   useEffect(() => {
     refetch();
-  }, [page, pageSize, refetch]);
+  }, [page, pageSize, search, refetch]);
 
   const deleteMutation = useMutation((id) => fetchClient.del(getRequestUrl(id)), {
     async onSuccess() {
@@ -200,6 +208,20 @@ const IndexView = ({ history }) => {
           </PrimaryAction>
         }
       />
+      <ActionLayout
+        startActions={
+          <SearchURLQuery
+            label={formatMessage({
+              id: getTrad('index.search.label'),
+              defaultMessage: 'Search by title or slug',
+            })}
+            placeholder={formatMessage({
+              id: getTrad('index.search.placeholder'),
+              defaultMessage: 'Search by title or slug',
+            })}
+          />
+        }
+      />
       <ContentLayout>
         <Box paddingBottom={10}>
           {data?.data?.length ? (
@@ -229,10 +251,17 @@ const IndexView = ({ history }) => {
             </>
           ) : (
             <EmptyStateLayout
-              content={{
-                id: getTrad('index.state.empty'),
-                defaultMessage: 'No menus found',
-              }}
+              content={
+                search
+                  ? {
+                      id: getTrad('index.state.empty-search'),
+                      defaultMessage: 'No results found',
+                    }
+                  : {
+                      id: getTrad('index.state.empty'),
+                      defaultMessage: 'No menus found',
+                    }
+              }
               action={
                 <PrimaryAction onClick={onClickCreate} size="S" variant="secondary">
                   {formatMessage({
