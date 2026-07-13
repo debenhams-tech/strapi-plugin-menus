@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useIntl } from 'react-intl';
 
@@ -20,6 +20,8 @@ import { AddButton } from './styled';
 const MenuItemsManager = ({ fields }) => {
   const { formatMessage } = useIntl();
   const [activeLevel, setActiveLevel] = useState(null);
+  const [collapsedIds, setCollapsedIds] = useState(() => new Set());
+  const hasInitializedCollapse = useRef(false);
   const {
     activeMenuItem,
     addMenuItem,
@@ -38,6 +40,44 @@ const MenuItemsManager = ({ fields }) => {
     id: getTrad('ui.add.menuItem'),
     defaultMessage: 'Add menu item',
   });
+
+  // Top-level menu items start out collapsed the first time they load.
+  useEffect(() => {
+    if (hasInitializedCollapse.current || !items.length) {
+      return;
+    }
+
+    hasInitializedCollapse.current = true;
+    setCollapsedIds(new Set(items.map((item) => item.id)));
+  }, [items]);
+
+  const toggleCollapsed = (id) => {
+    setCollapsedIds((prevCollapsedIds) => {
+      const nextCollapsedIds = new Set(prevCollapsedIds);
+
+      if (nextCollapsedIds.has(id)) {
+        nextCollapsedIds.delete(id);
+      } else {
+        nextCollapsedIds.add(id);
+      }
+
+      return nextCollapsedIds;
+    });
+  };
+
+  const expandItem = (id) => {
+    setCollapsedIds((prevCollapsedIds) => {
+      if (!prevCollapsedIds.has(id)) {
+        return prevCollapsedIds;
+      }
+
+      const nextCollapsedIds = new Set(prevCollapsedIds);
+
+      nextCollapsedIds.delete(id);
+
+      return nextCollapsedIds;
+    });
+  };
 
   const renderItems = (_items, level = 0) => {
     const parentId = _items[0]?.parent?.id;
@@ -63,23 +103,31 @@ const MenuItemsManager = ({ fields }) => {
           const itemIndex = modifiedData.items.findIndex((_item) => _item.id === item.id);
           const hasErrors = !!(errors?.items && errors.items[itemIndex]);
           const isActive = item.id === activeMenuItem?.id;
+          const hasChildren = !!item?.children?.length;
+          const isCollapsed = hasChildren && collapsedIds.has(item.id);
 
           return (
             <TreeMenuItem
               key={item.id}
               data={item}
+              hasChildren={hasChildren}
               hasErrors={hasErrors}
               isActive={isActive}
+              isCollapsed={isCollapsed}
               isFirst={item.order === 0}
               isLast={item.order === siblings.length - 1}
               isMaxDepth={maxDepthReached}
-              onAddSubmenu={() => addMenuItem(item.id)}
+              onAddSubmenu={() => {
+                addMenuItem(item.id);
+                expandItem(item.id);
+              }}
               onClick={() => setActiveMenuItem(isActive ? null : item)}
               onDelete={() => deleteMenuItem(item.id)}
               onMoveUp={() => moveMenuItem(item.id, -1)}
               onMoveDown={() => moveMenuItem(item.id, 1)}
+              onToggleCollapse={() => toggleCollapsed(item.id)}
             >
-              {!!item?.children?.length && renderItems(item.children, level + 1)}
+              {hasChildren && !isCollapsed && renderItems(item.children, level + 1)}
             </TreeMenuItem>
           );
         })}
